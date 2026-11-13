@@ -62,6 +62,10 @@ import com.thousandlabs.allblue.Screen
 import com.thousandlabs.allblue.data.Doc
 import com.thousandlabs.allblue.data.Files
 import com.thousandlabs.allblue.data.Prefs
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.ViewerBg
+import com.thousandlabs.allblue.ui.Accent
+import com.thousandlabs.allblue.ui.Outline
 import com.thousandlabs.allblue.ui.ConfirmDialog
 import com.thousandlabs.allblue.ui.TextDim
 import com.thousandlabs.allblue.ui.TextMain
@@ -122,9 +126,9 @@ fun PageToolsScreen(doc: Doc) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
+    Column(Modifier.fillMaxSize().background(ViewerBg)) {
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+            Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { if (changed) confirmLeave = true else Nav.pop() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = TextMain) }
@@ -160,13 +164,13 @@ fun PageToolsScreen(doc: Doc) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         Modifier.fillMaxWidth().aspectRatio(0.72f)
-                            .border(if (isSel) 3.dp else 1.dp, if (isSel) Color(0xFF5B9BFF) else Color(0xFF34425F), RoundedCornerShape(8.dp))
+                            .border(if (isSel) 3.dp else 1.dp, if (isSel) Accent else Outline, RoundedCornerShape(8.dp))
                             .padding(4.dp)
                             .clickable(onClick = { if (isSel) selected.remove(item.id) else selected.add(item.id) }),
                         contentAlignment = Alignment.Center
                     ) {
                         if (eng != null) Thumb(eng, item.src, item.rotation)
-                        if (isSel) Icon(Icons.Outlined.CheckCircle, null, tint = Color(0xFF5B9BFF),
+                        if (isSel) Icon(Icons.Outlined.CheckCircle, null, tint = Accent,
                             modifier = Modifier.align(Alignment.TopEnd).background(Color.White, CircleShape).size(22.dp))
                     }
                     Text("${pos + 1}", color = TextDim, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
@@ -175,7 +179,7 @@ fun PageToolsScreen(doc: Doc) {
         }
 
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).navigationBarsPadding().padding(vertical = 6.dp),
+            Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding().padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Action(Icons.Outlined.RotateRight, "Pivoter") {

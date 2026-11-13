@@ -50,6 +50,10 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Recherche par nom, et dans le contenu des documents.
 - Détection des doublons.
 
+**Apparence**
+- Thème clair (par défaut), sombre ou comme le téléphone, et six couleurs principales au choix.
+- Quatre icônes inspirées de la mer : la bouteille le matin, la barre du navire l'après-midi, le voilier le soir, le poisson la nuit (ou une icône fixe au choix).
+
 Chaque fonction peut être activée ou désactivée dans Réglages. Un guide « Comment faire » est intégré dans Réglages.
 
 ## Installation
@@ -63,6 +67,7 @@ Les mises à jour suivantes s'installent depuis l'appli (Réglages > Mises à jo
 
 ## Nouveautés
 
+- **Version 3** : thème clair par défaut, thème sombre et couleur principale au choix ; quatre icônes qui changent selon le moment de la journée.
 - **Version 2** : modification directe des Word, Excel et PowerPoint ; reconnaissance du texte des documents scannés (OCR) et PDF cherchables ; texte des photos ; PDF vers Word.
 - **Version 1** : lecteur PDF, Word, Excel, PowerPoint, EPUB ; annotations, signature, outils de pages, fusion, compression ; recherche, doublons, copies de secours.
 

@@ -84,6 +84,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AllBlueTheme {
+                // icônes de la barre d'état lisibles sur fond clair comme sur fond sombre
+                val dark = com.thousandlabs.allblue.ui.LocalPalette.current.dark
+                androidx.compose.runtime.SideEffect {
+                    val c = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                    c.isAppearanceLightStatusBars = !dark
+                    c.isAppearanceLightNavigationBars = !dark
+                }
                 Box(Modifier.fillMaxSize().background(Night)) {
                     val top = Nav.stack.last()
                     BackHandler(enabled = Nav.stack.size > 1) { Nav.pop() }
@@ -94,6 +101,7 @@ class MainActivity : ComponentActivity() {
         }
         if (savedInstanceState == null) handleIntent(intent)
         Updater.autoCheck()
+        com.thousandlabs.allblue.data.IconSwitcher.schedule(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -104,6 +112,18 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Updater.onAppResumed(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        com.thousandlabs.allblue.data.IconSwitcher.appVisible = true
+    }
+
+    // L'icône ne change que quand l'appli quitte l'écran : jamais pendant l'utilisation
+    override fun onStop() {
+        super.onStop()
+        com.thousandlabs.allblue.data.IconSwitcher.appVisible = false
+        if (!isChangingConfigurations) com.thousandlabs.allblue.data.IconSwitcher.apply(this)
     }
 
     @Composable

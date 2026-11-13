@@ -60,6 +60,8 @@ import com.thousandlabs.allblue.Screen
 import com.thousandlabs.allblue.data.Doc
 import com.thousandlabs.allblue.data.Files
 import com.thousandlabs.allblue.pdf.PdfTools
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.Accent
 import com.thousandlabs.allblue.ui.ConfirmDialog
 import com.thousandlabs.allblue.ui.TextDim
 import com.thousandlabs.allblue.ui.TextMain
@@ -107,7 +109,7 @@ fun TextScreen(doc: Doc) {
 
     Column(Modifier.fillMaxSize().background(Color(0xFFFBFBF8)).imePadding()) {
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+            Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { if (dirty) confirmLeave = true else Nav.pop() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = TextMain) }
@@ -125,7 +127,7 @@ fun TextScreen(doc: Doc) {
                     Files.toast(context, "Enregistré")
                     if (d.file != doc.file) Nav.reopen(d)
                 }
-            }) { Icon(Icons.Outlined.Save, "Enregistrer", tint = if (dirty) Color(0xFF5B9BFF) else TextDim) }
+            }) { Icon(Icons.Outlined.Save, "Enregistrer", tint = if (dirty) Accent else TextDim) }
             IconButton(onClick = { Files.share(context, listOf(doc.file)) }) { Icon(Icons.Outlined.Share, "Envoyer", tint = TextMain) }
         }
         val t = text

@@ -71,6 +71,9 @@ import com.thousandlabs.allblue.data.Doc
 import com.thousandlabs.allblue.data.DocType
 import com.thousandlabs.allblue.data.Files
 import com.thousandlabs.allblue.data.Prefs
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.ViewerBg
+import com.thousandlabs.allblue.ui.Accent
 import com.thousandlabs.allblue.ui.ConfirmDialog
 import com.thousandlabs.allblue.ui.Surface1
 import com.thousandlabs.allblue.ui.TextDim
@@ -109,7 +112,7 @@ private suspend fun finishSave(context: android.content.Context, doc: Doc, tmp: 
 private fun EditorBar(title: String, subtitle: String, canSave: Boolean, onBack: () -> Unit, onSave: (Boolean) -> Unit, extra: @Composable () -> Unit = {}) {
     var menu by remember { mutableStateOf(false) }
     Row(
-        Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+        Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = TextMain) }
@@ -173,7 +176,7 @@ private fun ParagraphEditor(doc: Doc) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF1A1F2B)).imePadding()) {
+    Column(Modifier.fillMaxSize().background(ViewerBg).imePadding()) {
         EditorBar(
             title = doc.name,
             subtitle = if (isWord) "Modifier le document" else "Modifier les textes des diapos",
@@ -205,7 +208,7 @@ private fun ParagraphEditor(doc: Doc) {
                         if (!isWord && para.where != lastWhere) {
                             lastWhere = para.where
                             item(key = "h-${para.where}") {
-                                Text(para.where, color = Color(0xFF5B9BFF), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
+                                Text(para.where, color = Accent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
                             }
                         }
                         item(key = para.index) {
@@ -248,7 +251,7 @@ private fun ParagraphCard(
     label: String, text: String, changed: Boolean, deleted: Boolean, canStructure: Boolean, isNew: Boolean = false,
     onChange: (String) -> Unit, onDelete: () -> Unit, onInsert: () -> Unit
 ) {
-    val border = when { deleted -> Color(0xFFFF6B6B); changed -> Color(0xFF5B9BFF); else -> Color(0xFFDADFE8) }
+    val border = when { deleted -> Color(0xFFFF6B6B); changed -> Accent; else -> Color(0xFFDADFE8) }
     Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(10.dp)).border(1.5.dp, border, RoundedCornerShape(10.dp)).padding(10.dp)) {
         if (label.isNotEmpty() || canStructure) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -335,7 +338,7 @@ private fun ExcelEditor(doc: Doc) {
     }
 
     val w = wb
-    Column(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
+    Column(Modifier.fillMaxSize().background(ViewerBg)) {
         EditorBar(doc.name, "Touchez une cellule pour la modifier", dirty, onBack = { if (dirty) confirmLeave = true else Nav.pop() }, onSave = ::save)
         when {
             error != null -> Text(error!!, color = TextMain, modifier = Modifier.padding(24.dp))

@@ -85,6 +85,9 @@ import androidx.compose.ui.unit.sp
 import com.thousandlabs.allblue.Nav
 import com.thousandlabs.allblue.data.Doc
 import com.thousandlabs.allblue.data.Files
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.ViewerBg
+import com.thousandlabs.allblue.ui.Accent
 import com.thousandlabs.allblue.ui.ConfirmDialog
 import com.thousandlabs.allblue.ui.InputDialog
 import com.thousandlabs.allblue.ui.Surface1
@@ -158,10 +161,10 @@ fun AnnotateScreen(doc: Doc, startPage: Int) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
+    Column(Modifier.fillMaxSize().background(ViewerBg)) {
         // ---------- Barre du haut ----------
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+            Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { if (total > 0) confirmLeave = true else Nav.pop() }) {
@@ -207,7 +210,7 @@ fun AnnotateScreen(doc: Doc, startPage: Int) {
         }
 
         // ---------- Outils ----------
-        Column(Modifier.fillMaxWidth().background(Color(0xF0101626)).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp)) {
+        Column(Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp)) {
             if (eng != null && eng.pageCount > 1) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     IconButton(onClick = { if (page > 0) page-- }, enabled = page > 0) { Icon(Icons.Outlined.ChevronLeft, "Page précédente", tint = TextMain) }
@@ -248,7 +251,7 @@ fun AnnotateScreen(doc: Doc, startPage: Int) {
                     }
                     val sel = t == tool
                     Column(
-                        Modifier.background(if (sel) Color(0x335B9BFF) else Color.Transparent, RoundedCornerShape(12.dp))
+                        Modifier.background(if (sel) Accent.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(12.dp))
                             .clickable {
                                 tool = t
                                 if (t == Tool.SIGN && signature == null) showSignPad = true
@@ -256,8 +259,8 @@ fun AnnotateScreen(doc: Doc, startPage: Int) {
                             }.padding(horizontal = 12.dp, vertical = 6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(icon, t.label, tint = if (sel) Color(0xFF5B9BFF) else TextMain)
-                        Text(t.label, color = if (sel) Color(0xFF5B9BFF) else TextDim, fontSize = 11.sp)
+                        Icon(icon, t.label, tint = if (sel) Accent else TextMain)
+                        Text(t.label, color = if (sel) Accent else TextDim, fontSize = 11.sp)
                     }
                 }
             }

@@ -75,6 +75,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Moteur d'édition PDF (licence Apache 2.0) ; l'affichage utilise le moteur intégré à Android (PDFium)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")

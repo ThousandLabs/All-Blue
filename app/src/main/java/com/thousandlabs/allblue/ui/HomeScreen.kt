@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AutoFixHigh
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
@@ -76,6 +79,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -533,6 +537,8 @@ private fun SettingsTab() {
     val context = LocalContext.current
     val version by Prefs.version.collectAsState()
     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+        item { SectionTitle("Apparence") }
+        item { AppearanceSettings(version) }
         item { SectionTitle("Lecteur par défaut") }
         item {
             Column(Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
@@ -608,6 +614,78 @@ private fun SettingsTab() {
 
 const val REPO_URL = "https://github.com/ThousandLabs/All-Blue"
 
+@Composable
+private fun AppearanceSettings(version: Int) {
+    val theme = remember(version) { appTheme() }
+    val accent = remember(version) { accentIndex() }
+    val iconMode = remember(version) { com.thousandlabs.allblue.data.IconSwitcher.mode() }
+    val dark = LocalPalette.current.dark
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
+        Text("Thème", color = TextMain)
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppTheme.entries.forEach { t ->
+                FilterChip(selected = t == theme, onClick = { Prefs.putInt("app_theme", t.ordinal) }, label = { Text(t.label) })
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Couleur principale : ${ACCENTS[accent].first}", color = TextMain)
+        Row(Modifier.padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ACCENTS.forEachIndexed { i, (name, light, darkC) ->
+                val c = if (dark) darkC else light
+                Box(
+                    Modifier.size(38.dp).background(c, androidx.compose.foundation.shape.CircleShape)
+                        .then(if (i == accent) Modifier.border(3.dp, TextMain, androidx.compose.foundation.shape.CircleShape) else Modifier)
+                        .clickable { Prefs.putInt("accent", i) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (i == accent) Icon(Icons.Outlined.Check, name, tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Icône de l'appli", color = TextMain)
+        Text(
+            "Changeante : la bouteille le matin, la barre l'après-midi, le voilier le soir et le poisson la nuit. " +
+                "L'icône change quand vous quittez l'appli.",
+            color = TextDim, style = MaterialTheme.typography.bodySmall
+        )
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconChoice(selected = iconMode < 0, label = "Changeante", onClick = { com.thousandlabs.allblue.data.IconSwitcher.setMode(-1) }) {
+                Box(Modifier.size(56.dp).background(Surface2, RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Schedule, null, tint = Accent, modifier = Modifier.size(28.dp))
+                }
+            }
+            com.thousandlabs.allblue.data.AppIcon.entries.forEachIndexed { i, ic ->
+                IconChoice(selected = iconMode == i, label = ic.moment, onClick = { com.thousandlabs.allblue.data.IconSwitcher.setMode(i) }) {
+                    androidx.compose.foundation.Image(
+                        androidx.compose.ui.res.painterResource(ICON_RES[i]), ic.label,
+                        Modifier.size(56.dp).clip(RoundedCornerShape(16.dp))
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val ICON_RES = listOf(
+    com.thousandlabs.allblue.R.drawable.icon_a, com.thousandlabs.allblue.R.drawable.icon_b,
+    com.thousandlabs.allblue.R.drawable.icon_c, com.thousandlabs.allblue.R.drawable.icon_d
+)
+
+@Composable
+private fun IconChoice(selected: Boolean, label: String, onClick: () -> Unit, content: @Composable () -> Unit) {
+    Column(
+        Modifier.clickable(onClick = onClick)
+            .then(if (selected) Modifier.border(2.dp, Accent, RoundedCornerShape(18.dp)) else Modifier)
+            .padding(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        content()
+        Spacer(Modifier.height(4.dp))
+        Text(label, color = if (selected) Accent else TextDim, fontSize = 11.sp)
+    }
+}
+
 /** Guide intégré : questions fréquentes et réponses. */
 private val GUIDE = listOf(
     "Zoomer sur une page" to "Écartez deux doigts, ou touchez deux fois l'endroit à agrandir. Touchez deux fois à nouveau pour revenir.",
@@ -627,6 +705,7 @@ private val GUIDE = listOf(
     "Lire un document scanné" to "Menu > Reconnaître le texte (OCR). Le texte des pages photographiées devient lisible : recherche, mode texte, écoute et conversion en Word fonctionnent ensuite. Choisissez « créer un PDF cherchable » pour une copie où le texte se sélectionne partout.",
     "Récupérer le texte d'une photo" to "Ouvrez l'image puis touchez l'icône de scan en haut : le texte s'affiche, prêt à être copié ou envoyé.",
     "Transformer un PDF en Word" to "Menu > Convertir en Word. Un fichier .docx modifiable est créé à côté du PDF (le texte et les paragraphes sont repris, pas la mise en page exacte).",
+    "Changer les couleurs ou l'icône" to "Réglages > Apparence : thème clair, sombre ou comme le téléphone, couleur principale, et icône changeante selon l'heure ou fixe. L'icône change quand vous quittez l'appli ; si son raccourci disparaît de l'écran d'accueil, remettez-le depuis le tiroir d'applis ou choisissez une icône fixe.",
     "Faire d'All Blue le lecteur par défaut" to "Ouvrez un PDF depuis WhatsApp ou vos fichiers, choisissez All Blue, puis « Toujours ». Répétez une fois pour Word, Excel et PowerPoint."
 )
 

@@ -2,6 +2,10 @@
 <resources>
     <!-- famille d'icônes Thousand Labs -->
     <color name="icon_background">#FF16233F</color>
-    <color name="lp_background">#FF0E1424</color>
+    <color name="lp_background">#FFFFFFFF</color>
     <color name="lp_accent">#FF5B9BFF</color>
+    <color name="icon_bg_a">#0B2147</color>
+    <color name="icon_bg_b">#DCEBFF</color>
+    <color name="icon_bg_c">#0E2A52</color>
+    <color name="icon_bg_d">#1B3B73</color>
 </resources>

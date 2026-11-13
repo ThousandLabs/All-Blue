@@ -115,6 +115,9 @@ import com.thousandlabs.allblue.data.Prefs
 import com.thousandlabs.allblue.data.ReadingTheme
 import com.thousandlabs.allblue.data.readingTheme
 import com.thousandlabs.allblue.data.setReadingTheme
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.ViewerBg
+import com.thousandlabs.allblue.ui.Accent
 import com.thousandlabs.allblue.ui.InputDialog
 import com.thousandlabs.allblue.ui.Surface1
 import com.thousandlabs.allblue.ui.TextDim
@@ -217,7 +220,7 @@ fun PdfScreen(doc: Doc) {
 
     val eng = engine
     if (eng == null) {
-        Box(Modifier.fillMaxSize().background(Color(0xFF1A1F2B)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(ViewerBg), contentAlignment = Alignment.Center) {
             if (error != null) Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(error!!, color = TextMain)
                 TextButton(onClick = { Nav.pop() }) { Text("Retour") }
@@ -304,7 +307,7 @@ fun PdfScreen(doc: Doc) {
     var showInfo by remember { mutableStateOf(false) }
     var showGoTo by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
+    Box(Modifier.fillMaxSize().background(ViewerBg)) {
         if (textMode) {
             TextModeView(texts, textProgress, fontSize, theme, listStateIndex = currentPage, speakingPage = speakingPage,
                 onTap = { chrome = !chrome }, onOcr = { askOcr = true })
@@ -374,7 +377,7 @@ fun PdfScreen(doc: Doc) {
         // ---------- Barre du haut ----------
         AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
             Row(
-                Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+                Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { Nav.pop() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = TextMain) }
@@ -454,7 +457,7 @@ fun PdfScreen(doc: Doc) {
 
         // ---------- Barre du bas ----------
         AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter)) {
-            Column(Modifier.fillMaxWidth().background(Color(0xF0101626)).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp)) {
+            Column(Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp)) {
                 if (eng.pageCount > 1 && !textMode) {
                     var dragValue by remember { mutableStateOf<Float?>(null) }
                     Slider(
@@ -764,7 +767,7 @@ private fun TextModeView(
             LazyColumn(state = state, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 80.dp, bottom = 160.dp)) {
                 itemsIndexed(texts) { i, t ->
                     Column(Modifier.padding(bottom = 20.dp)) {
-                        Text("Page ${i + 1}", color = if (i == speakingPage) Color(0xFF5B9BFF) else fg.copy(alpha = 0.5f),
+                        Text("Page ${i + 1}", color = if (i == speakingPage) Accent else fg.copy(alpha = 0.5f),
                             fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(6.dp))
                         Text(reflow(t), color = fg, fontSize = fontSize.sp, lineHeight = (fontSize * 1.5f).sp)
@@ -840,7 +843,7 @@ private fun SearchDialog(loadTexts: suspend () -> List<String>, onOcr: () -> Uni
                         LazyColumn(Modifier.height(380.dp)) {
                             itemsIndexed(hits) { _, h ->
                                 Column(Modifier.fillMaxWidth().clickable { onPick(h.page) }.padding(vertical = 8.dp)) {
-                                    Text("Page ${h.page + 1}", color = Color(0xFF5B9BFF), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("Page ${h.page + 1}", color = Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     Text(h.snippet, maxLines = 3, overflow = TextOverflow.Ellipsis)
                                 }
                                 HorizontalDivider()

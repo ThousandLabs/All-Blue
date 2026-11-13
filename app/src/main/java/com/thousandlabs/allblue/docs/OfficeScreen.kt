@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,6 +70,8 @@ import com.thousandlabs.allblue.data.ReadingTheme
 import com.thousandlabs.allblue.data.readingTheme
 import com.thousandlabs.allblue.data.setReadingTheme
 import com.thousandlabs.allblue.pdf.PrintHelper
+import com.thousandlabs.allblue.ui.BarBg
+import com.thousandlabs.allblue.ui.ViewerBg
 import com.thousandlabs.allblue.ui.TextDim
 import com.thousandlabs.allblue.ui.TextMain
 import kotlinx.coroutines.Dispatchers
@@ -118,6 +121,7 @@ fun OfficeScreen(doc: Doc) {
         }
     }
 
+    val viewerArgb = ViewerBg.toArgb()
     val ep = epub
     val target: File? = if (ep != null) ep.chapters.getOrNull(chapter.coerceIn(0, ep.chapters.lastIndex)) else html
     val themeJs = "document.body.classList.remove('night','sepia');" + when (theme) {
@@ -135,9 +139,9 @@ fun OfficeScreen(doc: Doc) {
         "(function(){var s=document.getElementById('ab-css')||document.createElement('style');s.id='ab-css';s.textContent=${jsString(epubCss)};document.head&&document.head.appendChild(s);})();"
     } else themeJs
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
+    Column(Modifier.fillMaxSize().background(ViewerBg)) {
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
+            Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { Nav.pop() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = TextMain) }
@@ -222,7 +226,6 @@ fun OfficeScreen(doc: Doc) {
                             settings.displayZoomControls = false
                             settings.useWideViewPort = true
                             settings.loadWithOverviewMode = true
-                            setBackgroundColor(android.graphics.Color.parseColor("#1A1F2B"))
                             webViewClient = object : WebViewClient() {
                                 override fun onPageFinished(view: WebView, url: String?) {
                                     (view.tag as? String)?.let { view.evaluateJavascript(it, null) }
@@ -235,6 +238,7 @@ fun OfficeScreen(doc: Doc) {
                         }
                     },
                     update = { wv ->
+                        wv.setBackgroundColor(viewerArgb)
                         wv.tag = injectJs
                         wv.settings.textZoom = zoom
                         val url = "file://" + target.absolutePath
@@ -245,7 +249,7 @@ fun OfficeScreen(doc: Doc) {
         }
 
         Row(
-            Modifier.fillMaxWidth().background(Color(0xF0101626)).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 2.dp),
+            Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
