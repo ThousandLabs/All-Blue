@@ -39,7 +39,7 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Recherche par nom, et dans le contenu des documents.
 - Détection des doublons.
 
-Chaque fonction peut être activée ou désactivée dans Réglages.
+Chaque fonction peut être activée ou désactivée dans Réglages. Un guide « Comment faire » est intégré dans Réglages.
 
 ## Installation
 

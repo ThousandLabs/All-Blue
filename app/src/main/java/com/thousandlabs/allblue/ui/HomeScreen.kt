@@ -77,6 +77,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -546,6 +547,20 @@ private fun SettingsTab() {
                 }) { Text("Ouvrir les applis par défaut d'Android") }
             }
         }
+        item { SectionTitle("Comment faire") }
+        GUIDE.forEach { (q, a) ->
+            item(key = "guide-$q") {
+                var open by remember { mutableStateOf(false) }
+                Column(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(q, color = TextMain, modifier = Modifier.weight(1f))
+                        Icon(Icons.Outlined.ChevronRight, null, tint = TextDim,
+                            modifier = Modifier.graphicsLayer { rotationZ = if (open) 90f else 0f })
+                    }
+                    if (open) Text(a, color = TextDim, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                }
+            }
+        }
         item { SectionTitle("Fonctions") }
         Feature.entries.forEach { f ->
             item(key = f.key + version) {
@@ -592,6 +607,24 @@ private fun SettingsTab() {
 }
 
 const val REPO_URL = "https://github.com/ThousandLabs/All-Blue"
+
+/** Guide intégré : questions fréquentes et réponses. */
+private val GUIDE = listOf(
+    "Zoomer sur une page" to "Écartez deux doigts, ou touchez deux fois l'endroit à agrandir. Touchez deux fois à nouveau pour revenir.",
+    "Aller directement à une page" to "Faites glisser la barre en bas de l'écran, ou touchez « Page x sur y » en haut et tapez le numéro.",
+    "Lire plus confortablement" to "Bouton « Texte » : le texte se remet à la largeur de l'écran, et sa taille se règle en bas. Menu (trois points) > Couleur de lecture pour le mode nuit ou sépia.",
+    "Écouter un document" to "Bouton « Écouter » : la lecture commence à la page affichée et continue toute seule. Pour changer de voix ou de vitesse : Réglages > Lecture à voix haute.",
+    "Surligner, écrire, signer" to "Bouton « Annoter », puis choisissez l'outil en bas. Votre signature se dessine une seule fois et se réutilise ensuite. Terminez par « Enregistrer ».",
+    "Cacher une information avant d'envoyer" to "Annoter > Masquer, puis tracez un rectangle sur l'information. Elle est supprimée de la page, pas seulement recouverte.",
+    "Pivoter, supprimer ou extraire des pages" to "Bouton « Pages » : touchez les pages pour les sélectionner, puis choisissez l'action en bas, et enregistrez.",
+    "Rendre un PDF plus léger" to "Menu > Compresser. Une version allégée est créée à côté de l'original, pratique pour WhatsApp.",
+    "Envoyer une partie d'un PDF" to "Menu > Envoyer certaines pages, puis tapez par exemple « 1-3, 5 ». Ou Menu > Page actuelle en image.",
+    "Transformer un Word, Excel ou PowerPoint en PDF" to "Ouvrez le fichier, Menu > Exporter en PDF, puis choisissez « Enregistrer au format PDF » comme imprimante.",
+    "Assembler plusieurs PDF ou des photos" to "Onglet Outils > Fusionner des PDF, ou Photos en PDF. Les fichiers créés sont rangés dans Documents/All Blue.",
+    "Retrouver un document" to "Loupe en haut de l'accueil : tapez une partie du nom. Activez « Chercher aussi dans le contenu » pour trouver un mot à l'intérieur des documents.",
+    "Récupérer l'original après une modification" to "Outils > Copies de secours : l'original y est gardé avant chaque modification. « Restaurer » le recrée dans Documents/All Blue.",
+    "Faire d'All Blue le lecteur par défaut" to "Ouvrez un PDF depuis WhatsApp ou vos fichiers, choisissez All Blue, puis « Toujours ». Répétez une fois pour Word, Excel et PowerPoint."
+)
 
 @Composable
 private fun UpdateSettings() {
