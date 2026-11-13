@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- famille d'icônes Thousand Labs -->
+    <color name="icon_background">#FF16233F</color>
+    <color name="lp_background">#FF0E1424</color>
+    <color name="lp_accent">#FF5B9BFF</color>
+</resources>

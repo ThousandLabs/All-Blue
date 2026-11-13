@@ -1,0 +1,6 @@
+-keep class com.thousandlabs.allblue.** { *; }
+-keep class com.tom_roush.** { *; }
+-dontwarn com.tom_roush.**
+-dontwarn com.gemalto.jp2.**
+-dontwarn org.jetbrains.annotations.**
+-dontwarn org.bouncycastle.**
