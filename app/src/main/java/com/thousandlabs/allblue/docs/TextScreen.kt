@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.PictureAsPdf
@@ -161,6 +162,9 @@ fun ImageScreen(doc: Doc) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var rotation by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    var ocrText by remember { mutableStateOf<String?>(null) }
+    var ocrRunning by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         bmp = withContext(Dispatchers.IO) { PdfTools.loadImage(doc.file, 3000) ?: BitmapFactory.decodeFile(doc.file.absolutePath) }
     }
@@ -189,9 +193,45 @@ fun ImageScreen(doc: Doc) {
             IconButton(onClick = { Nav.pop() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Retour", tint = Color.White) }
             Text(doc.name, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             IconButton(onClick = { rotation = (rotation + 90f) % 360f }) { Icon(Icons.Outlined.RotateRight, "Pivoter", tint = Color.White) }
+            IconButton(enabled = bmp != null && !ocrRunning, onClick = {
+                val b = bmp ?: return@IconButton
+                ocrRunning = true
+                scope.launch {
+                    val t = runCatching { com.thousandlabs.allblue.pdf.Ocr.recognize(b).text }.getOrNull()
+                    ocrRunning = false
+                    ocrText = t?.ifBlank { "Aucun texte trouvé sur cette image." } ?: "La reconnaissance a échoué."
+                }
+            }) { Icon(Icons.Outlined.DocumentScanner, "Extraire le texte", tint = Color.White) }
             IconButton(onClick = { Nav.push(Screen.ImagesToPdf(listOf(doc.file))) }) { Icon(Icons.Outlined.PictureAsPdf, "Convertir en PDF", tint = Color.White) }
             IconButton(onClick = { Files.share(context, listOf(doc.file)) }) { Icon(Icons.Outlined.Share, "Envoyer", tint = Color.White) }
             IconButton(onClick = { Files.openWithOther(context, doc.file) }) { Icon(Icons.Outlined.OpenInNew, "Ouvrir avec", tint = Color.White) }
         }
+        if (ocrRunning) com.thousandlabs.allblue.ui.BusyOverlay("Lecture du texte…")
+    }
+    ocrText?.let { t ->
+        val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { ocrText = null },
+            title = { Text("Texte de l'image") },
+            text = {
+                SelectionContainer {
+                    Text(t, modifier = Modifier.height(360.dp).verticalScroll(rememberScrollState()))
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    clipboard.setText(androidx.compose.ui.text.AnnotatedString(t)); Files.toast(context, "Texte copié")
+                }) { Text("Copier") }
+            },
+            dismissButton = {
+                Row {
+                    androidx.compose.material3.TextButton(onClick = {
+                        val f = File(File(context.cacheDir, "travail").apply { mkdirs() }, "${doc.file.nameWithoutExtension} - texte.txt")
+                        f.writeText(t); Files.share(context, listOf(f))
+                    }) { Text("Envoyer") }
+                    androidx.compose.material3.TextButton(onClick = { ocrText = null }) { Text("Fermer") }
+                }
+            }
+        )
     }
 }

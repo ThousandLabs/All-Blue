@@ -18,6 +18,8 @@ android {
         versionCode = buildNumber
         versionName = "1.$buildNumber"
         vectorDrawables { useSupportLibrary = true }
+        // téléphones Android actuels uniquement : appli plus légère
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     signingConfigs {
@@ -76,4 +78,7 @@ dependencies {
 
     // Moteur d'édition PDF (licence Apache 2.0) ; l'affichage utilise le moteur intégré à Android (PDFium)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+
+    // Reconnaissance du texte (OCR) hors ligne, modèle intégré à l'appli
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 }

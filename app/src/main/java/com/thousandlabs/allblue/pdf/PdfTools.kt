@@ -294,6 +294,53 @@ object PdfTools {
         }
     }
 
+    /**
+     * PDF « cherchable » : ajoute sous chaque ligne reconnue un texte invisible, à la même place.
+     * La page ne change pas à l'œil, mais on peut y chercher, sélectionner et copier le texte.
+     */
+    fun makeSearchable(src: File, pages: List<OcrPage>, out: File) {
+        load(src).use { doc ->
+            val font = PDType1Font.HELVETICA
+            pages.forEachIndexed { index, ocr ->
+                if (index >= doc.numberOfPages || ocr.lines.isEmpty()) return@forEachIndexed
+                val page = doc.getPage(index)
+                val box = page.cropBox ?: page.mediaBox
+                val rot = ((page.rotation % 360) + 360) % 360
+                val dispW = if (rot == 90 || rot == 270) box.height else box.width
+                val dispH = displayHeight(box, rot)
+                fun map(p: P): Pair<Float, Float> {
+                    val (u, v) = when (rot) {
+                        90 -> p.y to 1f - p.x
+                        180 -> 1f - p.x to 1f - p.y
+                        270 -> 1f - p.y to p.x
+                        else -> p.x to p.y
+                    }
+                    return box.lowerLeftX + u * box.width to box.lowerLeftY + (1f - v) * box.height
+                }
+                PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true).use { cs ->
+                    cs.beginText()
+                    cs.setRenderingMode(com.tom_roush.pdfbox.pdmodel.graphics.state.RenderingMode.NEITHER)
+                    for (line in ocr.lines) {
+                        val txt = encodable(font, line.text)
+                        if (txt.isBlank()) continue
+                        val height = (line.b - line.t) * dispH
+                        val width = (line.r - line.l) * dispW
+                        if (height <= 0f || width <= 0f) continue
+                        val size = height * 0.85f
+                        val natural = font.getStringWidth(txt) / 1000f * size
+                        val sx = if (natural > 0f) width / natural * size else size
+                        val (x, y) = map(P(line.l, line.b - (line.b - line.t) * 0.18f))
+                        cs.setFont(font, 1f)
+                        cs.setTextMatrix(com.tom_roush.pdfbox.util.Matrix(sx, 0f, 0f, size, x, y))
+                        cs.showText(txt)
+                    }
+                    cs.endText()
+                }
+            }
+            doc.save(out)
+        }
+    }
+
     private fun displayHeight(box: PDRectangle, rot: Int) = if (rot == 90 || rot == 270) box.width else box.height
 
     /** Retire les caractères que la police standard ne sait pas écrire (émojis, etc.). */

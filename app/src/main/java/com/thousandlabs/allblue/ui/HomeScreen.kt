@@ -623,6 +623,10 @@ private val GUIDE = listOf(
     "Assembler plusieurs PDF ou des photos" to "Onglet Outils > Fusionner des PDF, ou Photos en PDF. Les fichiers créés sont rangés dans Documents/All Blue.",
     "Retrouver un document" to "Loupe en haut de l'accueil : tapez une partie du nom. Activez « Chercher aussi dans le contenu » pour trouver un mot à l'intérieur des documents.",
     "Récupérer l'original après une modification" to "Outils > Copies de secours : l'original y est gardé avant chaque modification. « Restaurer » le recrée dans Documents/All Blue.",
+    "Modifier un Word, un Excel ou un PowerPoint" to "Ouvrez le fichier puis touchez le crayon en haut. Word : corrigez, ajoutez (+) ou supprimez des paragraphes. Excel : touchez une cellule, tapez un nombre, un texte ou une formule comme =SOMME(A1:A5). PowerPoint : corrigez les textes diapo par diapo. La mise en forme est conservée.",
+    "Lire un document scanné" to "Menu > Reconnaître le texte (OCR). Le texte des pages photographiées devient lisible : recherche, mode texte, écoute et conversion en Word fonctionnent ensuite. Choisissez « créer un PDF cherchable » pour une copie où le texte se sélectionne partout.",
+    "Récupérer le texte d'une photo" to "Ouvrez l'image puis touchez l'icône de scan en haut : le texte s'affiche, prêt à être copié ou envoyé.",
+    "Transformer un PDF en Word" to "Menu > Convertir en Word. Un fichier .docx modifiable est créé à côté du PDF (le texte et les paragraphes sont repris, pas la mise en page exacte).",
     "Faire d'All Blue le lecteur par défaut" to "Ouvrez un PDF depuis WhatsApp ou vos fichiers, choisissez All Blue, puis « Toujours ». Répétez une fois pour Word, Excel et PowerPoint."
 )
 

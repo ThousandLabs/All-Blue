@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.MoreVert
@@ -164,6 +165,11 @@ fun OfficeScreen(doc: Doc) {
                         if (ep != null) "Chapitre ${chapter + 1} sur ${ep.chapters.size}" else doc.type.label,
                         color = TextDim, style = MaterialTheme.typography.bodySmall
                     )
+                }
+                if (doc.type != DocType.EPUB && error == null) {
+                    IconButton(onClick = { Nav.push(com.thousandlabs.allblue.Screen.EditOffice(doc)) }) {
+                        Icon(Icons.Outlined.Edit, "Modifier", tint = TextMain)
+                    }
                 }
                 IconButton(onClick = { searching = true }) { Icon(Icons.Outlined.Search, "Rechercher", tint = TextMain) }
                 IconButton(onClick = { Prefs.toggleFavorite(doc.file.absolutePath) }) {

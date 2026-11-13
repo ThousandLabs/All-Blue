@@ -43,6 +43,8 @@ import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.FileCopy
 import androidx.compose.material.icons.outlined.Image
@@ -243,8 +245,14 @@ fun PdfScreen(doc: Doc) {
     suspend fun ensureTexts(): List<String> {
         texts?.let { return it }
         textProgress = 0f
-        val t = withContext(Dispatchers.IO) {
+        var t = withContext(Dispatchers.IO) {
             runCatching { PdfTools.pagesText(doc.file) { i, n -> textProgress = i.toFloat() / n } }.getOrDefault(List(eng.pageCount) { "" })
+        }
+        // Document scanné déjà reconnu : on reprend le texte de l'OCR
+        if (t.count { it.isBlank() } * 2 > t.size) {
+            withContext(Dispatchers.IO) { Ocr.cached(context, doc.file) }?.takeIf { it.size == t.size }?.let { o ->
+                t = t.mapIndexed { i, s -> if (s.isBlank()) o[i].text else s }
+            }
         }
         PdfTextCache.put(doc.file, t)
         texts = t
@@ -257,6 +265,23 @@ fun PdfScreen(doc: Doc) {
         snapshotFlow { listState.firstVisibleItemIndex }.debounce(600).collect {
             Prefs.setLastPage(doc.file.absolutePath, it)
         }
+    }
+
+    // ---------- Reconnaissance du texte (documents scannés) ----------
+    var askOcr by remember { mutableStateOf(false) }
+    var ocrProgress by remember { mutableStateOf<String?>(null) }
+    suspend fun runOcr(): List<OcrPage>? {
+        ocrProgress = "Reconnaissance du texte…"
+        val pages = runCatching {
+            Ocr.pdf(context, eng, doc.file) { i, n -> ocrProgress = "Reconnaissance du texte… page $i sur $n" }
+        }.getOrNull()
+        ocrProgress = null
+        if (pages == null) { Files.toast(context, "La reconnaissance du texte a échoué."); return null }
+        val base = texts ?: List(eng.pageCount) { "" }
+        val merged = base.mapIndexed { i, s -> if (s.isBlank()) pages.getOrNull(i)?.text.orEmpty() else s }
+        PdfTextCache.put(doc.file, merged)
+        texts = merged
+        return pages
     }
 
     // ---------- Lecture à voix haute ----------
@@ -282,7 +307,7 @@ fun PdfScreen(doc: Doc) {
     Box(Modifier.fillMaxSize().background(Color(0xFF1A1F2B))) {
         if (textMode) {
             TextModeView(texts, textProgress, fontSize, theme, listStateIndex = currentPage, speakingPage = speakingPage,
-                onTap = { chrome = !chrome })
+                onTap = { chrome = !chrome }, onOcr = { askOcr = true })
         } else {
             BoxWithConstraints(
                 Modifier.fillMaxSize()
@@ -387,6 +412,27 @@ fun PdfScreen(doc: Doc) {
                                     Files.share(context, listOf(out))
                                 }
                             })
+                        DropdownMenuItem(text = { Text("Convertir en Word") }, leadingIcon = { Icon(Icons.Outlined.Description, null) },
+                            onClick = {
+                                showMenu = false
+                                scope.launch {
+                                    val t = ensureTexts()
+                                    if (t.all { it.isBlank() }) { askOcr = true; return@launch }
+                                    Nav.busy.value = "Conversion en Word…"
+                                    val out = Files.siblingName(doc.file, "Word", "docx")
+                                    val ok = withContext(Dispatchers.IO) {
+                                        runCatching { com.thousandlabs.allblue.docs.DocxWriter.write(out, doc.file.nameWithoutExtension, t.map { reflow(it) }) }.isSuccess
+                                    }
+                                    Nav.busy.value = null
+                                    if (ok) {
+                                        Files.toast(context, "Document Word créé : ${out.name}")
+                                        Prefs.addRecent(out.absolutePath)
+                                        Nav.push(Screen.Viewer(Doc(out, out.name)))
+                                    } else Files.toast(context, "La conversion a échoué.")
+                                }
+                            })
+                        DropdownMenuItem(text = { Text("Reconnaître le texte (OCR)") }, leadingIcon = { Icon(Icons.Outlined.DocumentScanner, null) },
+                            onClick = { showMenu = false; askOcr = true })
                         DropdownMenuItem(text = { Text("Enregistrer une copie") }, leadingIcon = { Icon(Icons.Outlined.FileCopy, null) },
                             onClick = {
                                 showMenu = false
@@ -444,7 +490,7 @@ fun PdfScreen(doc: Doc) {
                         else ToolButton(Icons.AutoMirrored.Outlined.VolumeUp, "Écouter") {
                             scope.launch {
                                 val t = ensureTexts()
-                                if (t.all { it.isBlank() }) Files.toast(context, "Ce PDF ne contient pas de texte lisible (document scanné).")
+                                if (t.all { it.isBlank() }) askOcr = true
                                 else tts.start(t, currentPage)
                             }
                         }
@@ -471,6 +517,41 @@ fun PdfScreen(doc: Doc) {
     }
 
     // ---------- Fenêtres ----------
+    if (askOcr) {
+        AlertDialog(
+            onDismissRequest = { askOcr = false },
+            title = { Text("Reconnaître le texte") },
+            text = {
+                Text("All Blue va lire le texte des pages scannées, sans connexion (une à deux secondes par page). " +
+                    "Ensuite, la recherche, le mode texte, la lecture à voix haute et la conversion en Word fonctionneront.\n\n" +
+                    "Vous pourrez aussi créer une copie « cherchable » du PDF, où le texte se sélectionne et se retrouve dans n'importe quel lecteur.")
+            },
+            confirmButton = {
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = { askOcr = false; scope.launch { runOcr() } }) { Text("Reconnaître le texte") }
+                    TextButton(onClick = {
+                        askOcr = false
+                        scope.launch {
+                            val pages = runOcr() ?: return@launch
+                            Nav.busy.value = "Création du PDF cherchable…"
+                            val out = Files.siblingName(doc.file, "cherchable")
+                            val ok = withContext(Dispatchers.IO) { runCatching { PdfTools.makeSearchable(doc.file, pages, out) }.isSuccess }
+                            Nav.busy.value = null
+                            if (ok) {
+                                Files.toast(context, "PDF cherchable créé : ${out.name}")
+                                Prefs.addRecent(out.absolutePath)
+                                Nav.push(Screen.Viewer(Doc(out, out.name)))
+                            } else Files.toast(context, "La création a échoué.")
+                        }
+                    }) { Text("Reconnaître et créer un PDF cherchable") }
+                    TextButton(onClick = { askOcr = false }) { Text("Annuler") }
+                }
+            }
+        )
+    }
+
+    ocrProgress?.let { com.thousandlabs.allblue.ui.BusyOverlay(it) }
+
     if (showGoTo) {
         InputDialog(title = "Aller à la page", label = "1 à ${eng.pageCount}", number = true, confirm = "Aller",
             onDismiss = { showGoTo = false },
@@ -483,6 +564,7 @@ fun PdfScreen(doc: Doc) {
     if (showSearch) {
         SearchDialog(
             loadTexts = { ensureTexts() },
+            onOcr = { showSearch = false; askOcr = true },
             onDismiss = { showSearch = false },
             onPick = { p -> showSearch = false; scope.launch { listState.scrollToItem(p) } }
         )
@@ -653,7 +735,7 @@ private fun PageView(eng: PdfEngine, index: Int, size: Pair<Int, Int>, renderW: 
 @Composable
 private fun TextModeView(
     texts: List<String>?, progress: Float?, fontSize: Float, theme: ReadingTheme,
-    listStateIndex: Int, speakingPage: Int, onTap: () -> Unit
+    listStateIndex: Int, speakingPage: Int, onTap: () -> Unit, onOcr: () -> Unit
 ) {
     val (bg, fg) = when (theme) {
         ReadingTheme.NORMAL -> Color(0xFFFBFBF8) to Color(0xFF1C1F26)
@@ -668,10 +750,14 @@ private fun TextModeView(
             return@Box
         }
         if (texts.all { it.isBlank() }) {
-            Text(
-                "Ce PDF ne contient pas de texte lisible : c'est probablement un document scanné (des photos de pages).",
-                color = fg, modifier = Modifier.align(Alignment.Center).padding(32.dp)
-            )
+            Column(Modifier.align(Alignment.Center).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "Ce PDF ne contient pas de texte lisible : c'est un document scanné (des photos de pages).",
+                    color = fg
+                )
+                Spacer(Modifier.height(12.dp))
+                androidx.compose.material3.Button(onClick = onOcr) { Text("Reconnaître le texte") }
+            }
             return@Box
         }
         SelectionContainer {
@@ -690,7 +776,7 @@ private fun TextModeView(
 }
 
 /** Recolle les lignes coupées du PDF pour que le texte s'adapte à la largeur de l'écran. */
-private fun reflow(t: String): String {
+internal fun reflow(t: String): String {
     val lines = t.replace("\r", "").split('\n')
     val sb = StringBuilder()
     for ((i, raw) in lines.withIndex()) {
@@ -711,7 +797,7 @@ private fun reflow(t: String): String {
 }
 
 @Composable
-private fun SearchDialog(loadTexts: suspend () -> List<String>, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
+private fun SearchDialog(loadTexts: suspend () -> List<String>, onOcr: () -> Unit, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
     var query by remember { mutableStateOf("") }
     var texts by remember { mutableStateOf<List<String>?>(null) }
     LaunchedEffect(Unit) { texts = loadTexts() }
@@ -744,7 +830,10 @@ private fun SearchDialog(loadTexts: suspend () -> List<String>, onDismiss: () ->
                 Spacer(Modifier.height(8.dp))
                 when {
                     texts == null -> LinearProgressIndicator(Modifier.fillMaxWidth())
-                    texts!!.all { it.isBlank() } -> Text("Ce PDF ne contient pas de texte (document scanné) : la recherche est impossible.", color = TextDim)
+                    texts!!.all { it.isBlank() } -> Column {
+                        Text("Ce PDF est un document scanné : il faut d'abord reconnaître son texte.", color = TextDim)
+                        TextButton(onClick = onOcr) { Text("Reconnaître le texte") }
+                    }
                     query.trim().length >= 2 && hits.isEmpty() -> Text("Aucun résultat.", color = TextDim)
                     hits.isNotEmpty() -> {
                         Text("${hits.size}${if (hits.size > 300) "+" else ""} résultat(s)", color = TextDim, style = MaterialTheme.typography.bodySmall)

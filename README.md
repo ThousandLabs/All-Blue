@@ -28,7 +28,18 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Ajouter ou retirer un mot de passe.
 - Copie de secours automatique de l'original avant chaque modification.
 
+**Modification des fichiers Office**
+- Word : corriger, ajouter ou supprimer des paragraphes, mise en forme conservée.
+- Excel : modifier ou ajouter des cellules, formules à la française (=SOMME(A1:A5)), recalcul automatique.
+- PowerPoint : corriger les textes diapo par diapo.
+
+**Documents scannés (OCR, hors ligne)**
+- Reconnaissance du texte des PDF scannés : recherche, mode texte, voix et conversion en Word deviennent possibles.
+- Création d'un PDF « cherchable » (texte invisible sous l'image).
+- Extraction du texte d'une photo.
+
 **Conversion et partage**
+- PDF vers Word (.docx modifiable).
 - Word, Excel, PowerPoint et EPUB vers PDF (menu > Exporter en PDF).
 - Envoyer seulement certaines pages, ou une page en image.
 - Impression.
@@ -50,12 +61,12 @@ Chaque fonction peut être activée ou désactivée dans Réglages. Un guide « 
 
 Les mises à jour suivantes s'installent depuis l'appli (Réglages > Mises à jour).
 
-## Pour la suite
+## Nouveautés
 
-- Retouche directe des fichiers Word et Excel (corriger une phrase, changer une cellule).
-- Reconnaissance du texte des documents scannés (OCR).
+- **Version 2** : modification directe des Word, Excel et PowerPoint ; reconnaissance du texte des documents scannés (OCR) et PDF cherchables ; texte des photos ; PDF vers Word.
+- **Version 1** : lecteur PDF, Word, Excel, PowerPoint, EPUB ; annotations, signature, outils de pages, fusion, compression ; recherche, doublons, copies de secours.
 
 ## Technique
 
-Kotlin + Jetpack Compose. Affichage des PDF par le moteur intégré à Android (PDFium) ; modifications par PDFBox (licence Apache 2.0).
+Kotlin + Jetpack Compose. Affichage des PDF par le moteur intégré à Android (PDFium) ; modifications par PDFBox (licence Apache 2.0) ; reconnaissance du texte par ML Kit (hors ligne).
 L'APK est compilé et publié automatiquement par GitHub Actions à chaque envoi sur `main`.

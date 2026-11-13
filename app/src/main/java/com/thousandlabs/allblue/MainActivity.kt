@@ -20,6 +20,7 @@ import com.thousandlabs.allblue.data.Doc
 import com.thousandlabs.allblue.data.DocType
 import com.thousandlabs.allblue.data.Files
 import com.thousandlabs.allblue.data.Prefs
+import com.thousandlabs.allblue.docs.EditOfficeScreen
 import com.thousandlabs.allblue.docs.ImageScreen
 import com.thousandlabs.allblue.docs.OfficeScreen
 import com.thousandlabs.allblue.docs.TextScreen
@@ -45,6 +46,7 @@ sealed interface Screen {
     data class Viewer(val doc: Doc, val key: Long = System.nanoTime()) : Screen
     data class PageTools(val doc: Doc) : Screen
     data class Annotate(val doc: Doc, val page: Int) : Screen
+    data class EditOffice(val doc: Doc) : Screen
     data class Merge(val files: List<File>) : Screen
     data class ImagesToPdf(val files: List<File>) : Screen
     data object Backups : Screen
@@ -121,6 +123,7 @@ class MainActivity : ComponentActivity() {
             }
             is Screen.PageTools -> PageToolsScreen(s.doc)
             is Screen.Annotate -> AnnotateScreen(s.doc, s.page)
+            is Screen.EditOffice -> EditOfficeScreen(s.doc)
             is Screen.Merge -> MergeScreen(s.files)
             is Screen.ImagesToPdf -> ImagesToPdfScreen(s.files)
             Screen.Backups -> BackupsScreen()
