@@ -18,7 +18,7 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Mode texte adaptatif : le texte du PDF se remet à la largeur de l'écran, taille réglable.
 - Lecture à voix haute hors ligne, avec la voix française du téléphone (vitesse réglable).
 - Recherche dans le document, sommaire cliquable, favoris.
-- Mode présentation pour les PowerPoint, onglets de feuilles pour les Excel, chapitres pour les EPUB.
+- PowerPoint fidèles à l'original (couleurs, fonds, formes, tableaux) et mode présentation, onglets de feuilles pour les Excel, chapitres pour les EPUB.
 
 **Retouche des PDF**
 - Stylo, surligneur, texte, signature (dessinée une fois, réutilisable).
@@ -67,6 +67,7 @@ Les mises à jour suivantes s'installent depuis l'appli (Réglages > Mises à jo
 
 ## Nouveautés
 
+- **Version 5** : PowerPoint affichés fidèlement : couleurs du thème, fonds de diapo, formes rondes et arrondies, transparence, textes des modèles bien placés, puces, tableaux en couleur ; plus aucun texte qui se superpose.
 - **Version 4** : liste des récents sans doublons ; un document rouvert, même depuis WhatsApp ou un autre dossier, remonte en haut au lieu d'être ajouté une nouvelle fois, et les doublons déjà présents sont retirés.
 - **Version 3** : thème clair par défaut, thème sombre et couleur principale au choix ; quatre icônes qui changent selon le moment de la journée.
 - **Version 2** : modification directe des Word, Excel et PowerPoint ; reconnaissance du texte des documents scannés (OCR) et PDF cherchables ; texte des photos ; PDF vers Word.
