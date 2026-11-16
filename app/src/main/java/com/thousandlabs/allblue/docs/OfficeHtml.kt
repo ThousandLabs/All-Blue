@@ -1030,14 +1030,4 @@ body.present main{padding:0;gap:0;height:100vh;overflow-y:scroll;scroll-snap-typ
 body.present .slide{border-radius:0;scroll-snap-align:center;margin:auto 0;flex:0 0 auto}
 body.present main{justify-content:flex-start}
 """
-main{padding:10px;display:flex;flex-direction:column;gap:14px}
-.slide{position:relative;width:100%;background:#fff;color:#111;border-radius:6px;overflow:hidden;container-type:inline-size;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.slide .num{position:absolute;right:6px;bottom:4px;font-size:11px;color:#999;z-index:5}
-.el{position:absolute;box-sizing:border-box;overflow:hidden;font-size:2.6cqw;line-height:1.2;padding:.4cqw}
-.el p{margin:0 0 .4cqw 0}img.el{object-fit:contain;padding:0}
-body.present{background:#000}
-body.present main{padding:0;gap:0;height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory}
-body.present .slide{border-radius:0;scroll-snap-align:center;margin:auto 0;flex:0 0 auto}
-body.present main{justify-content:flex-start}
-"""
 }
