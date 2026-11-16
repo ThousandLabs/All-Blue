@@ -706,6 +706,7 @@ private val GUIDE = listOf(
     "Récupérer le texte d'une photo" to "Ouvrez l'image puis touchez l'icône de scan en haut : le texte s'affiche, prêt à être copié ou envoyé.",
     "Transformer un PDF en Word" to "Menu > Convertir en Word. Un fichier .docx modifiable est créé à côté du PDF (le texte et les paragraphes sont repris, pas la mise en page exacte).",
     "Changer les couleurs ou l'icône" to "Réglages > Apparence : thème clair, sombre ou comme le téléphone, couleur principale, et icône changeante selon l'heure ou fixe. L'icône change quand vous quittez l'appli ; si son raccourci disparaît de l'écran d'accueil, remettez-le depuis le tiroir d'applis ou choisissez une icône fixe.",
+    "Retrouver un document ouvert souvent" to "Onglet Récents : chaque document n'y apparaît qu'une fois. Quand vous rouvrez un fichier déjà présent, même depuis WhatsApp ou un autre dossier, il remonte simplement en haut de la liste. Pour l'avoir toujours sous la main, ajoutez-le aux favoris (étoile).",
     "Faire d'All Blue le lecteur par défaut" to "Ouvrez un PDF depuis WhatsApp ou vos fichiers, choisissez All Blue, puis « Toujours ». Répétez une fois pour Word, Excel et PowerPoint."
 )
 

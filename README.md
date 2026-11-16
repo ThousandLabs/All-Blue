@@ -45,7 +45,7 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Impression.
 
 **Retrouver ses fichiers**
-- Récents, favoris, raccourci Documents WhatsApp, Téléchargements, tout le stockage.
+- Récents sans doublons (un document ouvert souvent n'apparaît qu'une fois et remonte en haut), favoris, raccourci Documents WhatsApp, Téléchargements, tout le stockage.
 - « Tous mes documents » : tous les PDF, Word, Excel… du téléphone, filtrables par type.
 - Recherche par nom, et dans le contenu des documents.
 - Détection des doublons.
@@ -67,6 +67,7 @@ Les mises à jour suivantes s'installent depuis l'appli (Réglages > Mises à jo
 
 ## Nouveautés
 
+- **Version 4** : liste des récents sans doublons ; un document rouvert, même depuis WhatsApp ou un autre dossier, remonte en haut au lieu d'être ajouté une nouvelle fois, et les doublons déjà présents sont retirés.
 - **Version 3** : thème clair par défaut, thème sombre et couleur principale au choix ; quatre icônes qui changent selon le moment de la journée.
 - **Version 2** : modification directe des Word, Excel et PowerPoint ; reconnaissance du texte des documents scannés (OCR) et PDF cherchables ; texte des photos ; PDF vers Word.
 - **Version 1** : lecteur PDF, Word, Excel, PowerPoint, EPUB ; annotations, signature, outils de pages, fusion, compression ; recherche, doublons, copies de secours.

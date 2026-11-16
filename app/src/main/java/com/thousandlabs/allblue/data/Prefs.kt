@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
+import java.io.File
 
 /** Réglages, fichiers récents, favoris et dernière page lue. Tout reste sur le téléphone. */
 object Prefs {
@@ -25,6 +26,69 @@ object Prefs {
         sp = context.getSharedPreferences("lecteur", Context.MODE_PRIVATE)
         _recents.value = readList("recents")
         _favorites.value = readList("favorites").toSet()
+        // nettoyage des doublons déjà enregistrés (lecture des fichiers : hors du fil principal)
+        Thread {
+            val before = _recents.value
+            val cleaned = dedupe(before)
+            // si un document a été ouvert entre-temps, on ne remplace pas la liste
+            if (cleaned != before && _recents.compareAndSet(before, cleaned)) writeList("recents", cleaned)
+        }.start()
+    }
+
+    // ---------- Un document = une seule ligne dans les récents ----------
+
+    /**
+     * Empreinte du contenu : taille + somme de contrôle du début et de la fin du fichier.
+     * Le même document ouvert par deux chemins différents (vrai emplacement, copie faite à
+     * l'ouverture depuis WhatsApp ou un gestionnaire de fichiers, /sdcard ou /storage/emulated/0)
+     * a la même empreinte.
+     */
+    private fun fingerprint(f: File): String? = runCatching {
+        if (!f.isFile) return@runCatching null
+        val len = f.length()
+        val crc = java.util.zip.CRC32()
+        java.io.RandomAccessFile(f, "r").use { raf ->
+            val buf = ByteArray(64 * 1024)
+            val n1 = raf.read(buf).coerceAtLeast(0)
+            crc.update(buf, 0, n1)
+            if (len > buf.size * 2) {
+                raf.seek(len - buf.size)
+                val n2 = raf.read(buf).coerceAtLeast(0)
+                crc.update(buf, 0, n2)
+            }
+        }
+        "$len:${crc.value}"
+    }.getOrNull()
+
+    private fun canonical(path: String): String = runCatching { File(path).canonicalPath }.getOrDefault(path)
+
+    /** Empreintes gardées en mémoire, et sur le téléphone pour les copies effacées entre-temps. */
+    private val fpCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    private fun fpOf(path: String): String? {
+        val f = File(path)
+        val stored = sp.getString("fp:$path", null)
+        if (!f.exists()) return stored
+        val key = "$path|${f.length()}|${f.lastModified()}"
+        fpCache[key]?.let { return it }
+        val fp = fingerprint(f) ?: return stored
+        fpCache[key] = fp
+        if (fp != stored) sp.edit().putString("fp:$path", fp).apply()
+        return fp
+    }
+
+    /** Garde la première apparition de chaque document (la plus récente) et retire les autres. */
+    private fun dedupe(list: List<String>): List<String> {
+        val seenPaths = HashSet<String>()
+        val seenFp = HashSet<String>()
+        return list.filter { p ->
+            val c = canonical(p)
+            val fp = fpOf(p)
+            val dup = c in seenPaths || (fp != null && fp in seenFp)
+            seenPaths += c
+            if (fp != null) seenFp += fp
+            !dup
+        }
     }
 
     private fun readList(key: String): List<String> = runCatching {
@@ -36,14 +100,25 @@ object Prefs {
         sp.edit().putString(key, JSONArray(list.toList()).toString()).apply()
     }
 
+    /**
+     * Ajoute un document en tête des récents. S'il y était déjà (même chemin, même fichier
+     * sous un autre chemin, ou même contenu), l'ancienne ligne est retirée : il remonte simplement en haut.
+     */
     fun addRecent(path: String) {
-        val list = listOf(path) + _recents.value.filter { it != path }
+        val c = canonical(path)
+        val fp = fpOf(path)
+        val list = listOf(path) + _recents.value.filter { p ->
+            p != path && canonical(p) != c && (fp == null || sp.getString("fp:$p", null) != fp)
+        }
         _recents.value = list.take(80)
         writeList("recents", _recents.value)
     }
 
     fun removeRecent(path: String) {
-        _recents.value = _recents.value.filter { it != path }
+        // retire aussi les éventuelles autres lignes du même document
+        val c = canonical(path)
+        val fp = sp.getString("fp:$path", null)
+        _recents.value = _recents.value.filter { p -> p != path && canonical(p) != c && (fp == null || sp.getString("fp:$p", null) != fp) }
         writeList("recents", _recents.value)
     }
 
@@ -68,6 +143,7 @@ object Prefs {
         }
         _recents.value = _recents.value.map { if (it == from) to else it }.distinct()
         writeList("recents", _recents.value)
+        sp.getString("fp:$from", null)?.let { sp.edit().putString("fp:$to", it).apply() }
         val page = lastPage(from)
         if (page > 0) setLastPage(to, page)
     }
