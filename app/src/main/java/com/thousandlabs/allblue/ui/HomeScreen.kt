@@ -697,6 +697,7 @@ private val GUIDE = listOf(
     "Pivoter, supprimer ou extraire des pages" to "Bouton « Pages » : touchez les pages pour les sélectionner, puis choisissez l'action en bas, et enregistrez.",
     "Rendre un PDF plus léger" to "Menu > Compresser. Une version allégée est créée à côté de l'original, pratique pour WhatsApp.",
     "Envoyer une partie d'un PDF" to "Menu > Envoyer certaines pages, puis tapez par exemple « 1-3, 5 ». Ou Menu > Page actuelle en image.",
+    "Présenter un PowerPoint" to "Ouvrez le fichier, puis Menu > Mode présentation : les diapos s'affichent une par une, en plein écran. Glissez vers la gauche ou touchez le bord droit pour avancer, le bord gauche pour reculer. Pour sortir, touchez « Quitter » en bas à droite ou faites retour. Les PowerPoint s'affichent toujours à leur taille d'origine, pour que le texte reste dans ses cadres.",
     "Transformer un Word, Excel ou PowerPoint en PDF" to "Ouvrez le fichier, Menu > Exporter en PDF, puis choisissez « Enregistrer au format PDF » comme imprimante.",
     "Assembler plusieurs PDF ou des photos" to "Onglet Outils > Fusionner des PDF, ou Photos en PDF. Les fichiers créés sont rangés dans Documents/All Blue.",
     "Retrouver un document" to "Loupe en haut de l'accueil : tapez une partie du nom. Activez « Chercher aussi dans le contenu » pour trouver un mot à l'intérieur des documents.",

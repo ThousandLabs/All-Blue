@@ -18,7 +18,8 @@ Les anciens formats Office (.doc, .xls, .ppt) ne sont pas pris en charge : All B
 - Mode texte adaptatif : le texte du PDF se remet à la largeur de l'écran, taille réglable.
 - Lecture à voix haute hors ligne, avec la voix française du téléphone (vitesse réglable).
 - Recherche dans le document, sommaire cliquable, favoris.
-- PowerPoint fidèles à l'original (couleurs, fonds, formes, tableaux) et mode présentation, onglets de feuilles pour les Excel, chapitres pour les EPUB.
+- PowerPoint fidèles à l'original (couleurs, fonds, formes, tableaux, polices aux mêmes dimensions qu'Office : le texte reste dans ses cadres), onglets de feuilles pour les Excel, chapitres pour les EPUB.
+- Mode présentation plein écran pour les PowerPoint : une diapo à la fois, glisser ou toucher les bords pour avancer.
 
 **Retouche des PDF**
 - Stylo, surligneur, texte, signature (dessinée une fois, réutilisable).

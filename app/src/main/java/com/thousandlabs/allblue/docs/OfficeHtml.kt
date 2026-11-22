@@ -707,7 +707,18 @@ object OfficeHtml {
         val f = when { face.startsWith("+mj") -> theme.major; face.startsWith("+mn") -> theme.minor; else -> face }
         val low = f.lowercase(Locale.ROOT)
         val serif = listOf("cambria", "georgia", "times", "garamond", "serif", "bookman", "century", "palatino", "constantia").any { it in low }
-        return "'" + f.replace("'", "").replace("\"", "") + "'," + (if (serif) "serif" else "sans-serif")
+        // Polices intégrées aux mêmes dimensions que celles d'Office : le texte occupe exactement la même place
+        // que dans PowerPoint, sans retour à la ligne en trop ni chevauchement.
+        val twin = when {
+            "calibri" in low -> "AB Carlito"
+            "cambria" in low -> "AB Caladea"
+            "courier" in low || "consolas" in low -> "AB Mono"
+            "times" in low || "liberation serif" in low -> "AB Serif"
+            "arial" in low || "helvetica" in low || "liberation sans" in low -> "AB Sans"
+            else -> null
+        }
+        val name = "'" + f.replace("'", "").replace("\"", "") + "'"
+        return (if (twin != null) "'$twin',$name" else name) + "," + (if (serif) "'AB Serif',serif" else "'AB Sans',sans-serif")
     }
 
     private fun autoNum(kind: String, n: Int): String {
@@ -958,7 +969,8 @@ object OfficeHtml {
             val sp = parsePart(xml, theme)
             val bg = sp.bg ?: lp?.bg ?: mp?.bg ?: "FFFFFF"
             val sn = index + 1
-            sb.append("<section class=\"slide\" style=\"aspect-ratio:$cx/$cy;background:#$bg\"><div class=\"num\">$sn</div>")
+            val baseFont = fontCss("+mn-lt", theme)?.let { "font-family:$it;" } ?: ""
+            sb.append("<section class=\"slide\" style=\"aspect-ratio:$cx/$cy;--ar:${num(cx.toDouble() / cy)};background:#$bg;$baseFont\"><div class=\"num\">$sn</div>")
             if (sp.showMaster && lp?.showMaster != false && mp != null) {
                 for (s in mp.shapes) if (!s.isPh) sb.append(renderShape(zip, s, cx, cy, theme, mrel, sn, emptyList(), emptyList(), mp, presDef))
             }
@@ -971,8 +983,7 @@ object OfficeHtml {
             sb.append("</section>")
         }
         if (slidePaths.isEmpty()) sb.append("<p>Aucune diapositive.</p>")
-        val script = "<script>function togglePresent(){document.body.classList.toggle('present');}</script>"
-        page(file.nameWithoutExtension, PPTX_CSS, "<main>$sb</main>$script")
+        page(file.nameWithoutExtension, FONTS_CSS + PPTX_CSS, "<main>$sb</main>$PRESENT_HTML")
     }
 
     // =====================================================================
@@ -1025,9 +1036,42 @@ main{padding:10px;display:flex;flex-direction:column;gap:14px}
 img.el{object-fit:fill}
 .tb{width:100%;border-collapse:collapse;table-layout:fixed}.tb td{box-sizing:border-box;overflow-wrap:break-word}.tb p{margin:0}
 .chart{display:flex;align-items:center;justify-content:center;color:#888;border:1px dashed #bbb}
-body.present{background:#000}
-body.present main{padding:0;gap:0;height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory}
-body.present .slide{border-radius:0;scroll-snap-align:center;margin:auto 0;flex:0 0 auto}
-body.present main{justify-content:flex-start}
+body.present{background:#000;overflow:hidden}
+body.present main{position:fixed;inset:0;display:block;padding:0}
+body.present .slide{display:none}
+body.present .slide.cur{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,calc(100vh * var(--ar,1.7778)));border-radius:0;box-shadow:none}
+body.present .slide .num{display:none}
+#abp{display:none}
+body.present #abp{display:flex;position:fixed;right:10px;bottom:10px;z-index:20;gap:8px;align-items:center;font:14px sans-serif;color:#fff;opacity:.55}
+#abp a{color:#fff;text-decoration:none;background:rgba(255,255,255,.18);border-radius:14px;padding:6px 12px}
 """
+
+    /** Polices intégrées (assets/fonts) aux mêmes dimensions que les polices d'Office. */
+    private val FONTS_CSS: String = buildString {
+        val fams = listOf("AB Sans" to "ab-sans", "AB Serif" to "ab-serif", "AB Mono" to "ab-mono", "AB Carlito" to "ab-carlito", "AB Caladea" to "ab-caladea")
+        val styles = listOf(Triple("r", "normal", "normal"), Triple("b", "bold", "normal"), Triple("i", "normal", "italic"), Triple("bi", "bold", "italic"))
+        for ((fam, file) in fams) for ((suf, w, st) in styles) {
+            if (file == "ab-mono" && (suf == "i" || suf == "bi")) continue
+            append("@font-face{font-family:'$fam';src:url('file:///android_asset/fonts/$file-$suf.woff') format('woff');font-weight:$w;font-style:$st}")
+        }
+    }
+
+    /** Mode présentation : une diapo à la fois, en plein écran ; glisser ou toucher les bords pour avancer. */
+    private const val PRESENT_HTML = """<div id="abp"><span id="abc"></span><a href="allblue://quitter">Quitter</a></div>
+<script>
+var abOn=false,abI=0,abX=null,abY=0,abT=0;
+function abSlides(){return document.querySelectorAll('.slide')}
+function abShow(k){var s=abSlides();if(!s.length)return;abI=Math.max(0,Math.min(s.length-1,k));for(var j=0;j<s.length;j++)s[j].classList.toggle('cur',j===abI);var c=document.getElementById('abc');if(c)c.textContent=(abI+1)+' / '+s.length}
+function setPresent(on){on=!!on;if(on===abOn)return;var s=abSlides();
+ if(on){var best=0,bd=1e9;for(var j=0;j<s.length;j++){var r=s[j].getBoundingClientRect(),d=Math.abs(r.top+r.height/2-innerHeight/2);if(d<bd){bd=d;best=j}}abOn=true;document.body.classList.add('present');abShow(best)}
+ else{abOn=false;document.body.classList.remove('present');if(s[abI])s[abI].scrollIntoView()}}
+function togglePresent(){setPresent(!abOn)}
+document.addEventListener('touchstart',function(e){if(!abOn||e.touches.length!==1)return;abX=e.touches[0].clientX;abY=e.touches[0].clientY;abT=Date.now()},{passive:true});
+document.addEventListener('touchend',function(e){if(!abOn||abX===null)return;var t=e.changedTouches[0],dx=t.clientX-abX,dy=t.clientY-abY;abX=null;
+ if(e.target.closest&&e.target.closest('#abp'))return;
+ if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))abShow(abI+(dx<0?1:-1));
+ else if(Math.abs(dx)<12&&Math.abs(dy)<12&&Date.now()-abT<500)abShow(abI+(t.clientX<innerWidth*0.3?-1:1))});
+document.addEventListener('click',function(e){if(!abOn||e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)return;if(e.target.closest&&e.target.closest('#abp'))return;abShow(abI+(e.clientX<innerWidth*0.3?-1:1))});
+document.addEventListener('keydown',function(e){if(!abOn)return;var k=e.key;if(k==='ArrowRight'||k==='ArrowDown'||k===' '||k==='PageDown')abShow(abI+1);else if(k==='ArrowLeft'||k==='ArrowUp'||k==='PageUp')abShow(abI-1)});
+</script>"""
 }

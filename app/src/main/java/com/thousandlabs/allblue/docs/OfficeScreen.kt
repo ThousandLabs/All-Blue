@@ -1,6 +1,13 @@
 package com.thousandlabs.allblue.docs
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -98,6 +105,25 @@ fun OfficeScreen(doc: Doc) {
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf("") }
+    // PowerPoint : mise en page fixe (texte à 100 %) et mode présentation plein écran
+    val slides = doc.type == DocType.POWERPOINT
+    var presenting by remember { mutableStateOf(false) }
+    BackHandler(enabled = presenting) { presenting = false }
+    LaunchedEffect(presenting, webView) {
+        webView?.evaluateJavascript("if(window.setPresent)setPresent($presenting)", null)
+        (context as? Activity)?.window?.let { w ->
+            val c = WindowCompat.getInsetsController(w, w.decorView)
+            if (presenting) {
+                c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                c.hide(WindowInsetsCompat.Type.systemBars())
+            } else c.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            (context as? Activity)?.window?.let { w -> WindowCompat.getInsetsController(w, w.decorView).show(WindowInsetsCompat.Type.systemBars()) }
+        }
+    }
 
     LaunchedEffect(doc.file) {
         val r = withContext(Dispatchers.IO) {
@@ -139,8 +165,8 @@ fun OfficeScreen(doc: Doc) {
         "(function(){var s=document.getElementById('ab-css')||document.createElement('style');s.id='ab-css';s.textContent=${jsString(epubCss)};document.head&&document.head.appendChild(s);})();"
     } else themeJs
 
-    Column(Modifier.fillMaxSize().background(ViewerBg)) {
-        Row(
+    Column(Modifier.fillMaxSize().background(if (presenting) Color.Black else ViewerBg)) {
+        if (!presenting) Row(
             Modifier.fillMaxWidth().background(BarBg).statusBarsPadding().height(56.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -184,7 +210,7 @@ fun OfficeScreen(doc: Doc) {
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (doc.type == DocType.POWERPOINT) {
                             DropdownMenuItem(text = { Text("Mode présentation") }, leadingIcon = { Icon(Icons.Outlined.Slideshow, null) },
-                                onClick = { menu = false; webView?.evaluateJavascript("togglePresent()", null) })
+                                onClick = { menu = false; presenting = true })
                         }
                         DropdownMenuItem(text = { Text("Exporter en PDF") }, leadingIcon = { Icon(Icons.Outlined.PictureAsPdf, null) },
                             onClick = {
@@ -231,8 +257,10 @@ fun OfficeScreen(doc: Doc) {
                                     (view.tag as? String)?.let { view.evaluateJavascript(it, null) }
                                 }
                                 // les liens internes d'un EPUB s'ouvrent dans le lecteur, les liens web ne s'ouvrent pas
-                                override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean =
-                                    request.url.scheme != "file"
+                                override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
+                                    if (request.url.toString() == "allblue://quitter") { presenting = false; return true }
+                                    return request.url.scheme != "file"
+                                }
                             }
                             webView = this
                         }
@@ -240,7 +268,8 @@ fun OfficeScreen(doc: Doc) {
                     update = { wv ->
                         wv.setBackgroundColor(viewerArgb)
                         wv.tag = injectJs
-                        wv.settings.textZoom = zoom
+                        // les diapos ont une mise en page fixe : agrandir le texte le ferait déborder de ses cadres
+                        wv.settings.textZoom = if (slides) 100 else zoom
                         val url = "file://" + target.absolutePath
                         if (wv.url != url) wv.loadUrl(url) else wv.evaluateJavascript(injectJs, null)
                     }
@@ -248,7 +277,9 @@ fun OfficeScreen(doc: Doc) {
             }
         }
 
-        Row(
+        if (slides) {
+            if (!presenting) Spacer(Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding())
+        } else Row(
             Modifier.fillMaxWidth().background(BarBg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
